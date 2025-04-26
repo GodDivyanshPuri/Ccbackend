@@ -1,23 +1,20 @@
 {
-  "name": "kotlin-editor-server",
+  "name": "kotlin-code-runner",
   "version": "1.0.0",
-  "description": "Kotlin code editor backend server",
+  "description": "Run Kotlin code from frontend via Node.js backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [
-    "kotlin",
-    "compiler",
-    "backend",
-    "nodejs",
-    "express"
-  ],
-  "author": "Red Thompson King",
-  "license": "MIT",
   "dependencies": {
-    "axios": "^1.7.2",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2"
-  }
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": ["kotlin", "code-runner", "nodejs", "express", "backend"],
+  "author": "Red Thompson King",
+  "license": "MIT"
 }
