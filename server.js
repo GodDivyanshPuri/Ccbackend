@@ -1,39 +1,61 @@
 const express = require('express');
 const cors = require('cors');
-const axios = require('axios');
+const bodyParser = require('body-parser');
+const { exec } = require('child_process');
+const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// CORS setup — only allow your frontend URL
+app.use(cors({
+    origin: 'https://divyanshccfkotlin.netlify.app'
+}));
 
-// POST route to run Kotlin code
-app.post('/run', async (req, res) => {
+app.use(bodyParser.json());
+
+// Route to run Kotlin code
+app.post('/run', (req, res) => {
     const { code } = req.body;
 
     if (!code) {
-        return res.status(400).json({ error: 'Code is required' });
+        return res.status(400).json({ error: 'Code is missing' });
     }
 
-    try {
-        // JDoodle API ke sath code compile karenge
-        const response = await axios.post('https://api.jdoodle.com/v1/execute', {
-            script: code,
-            language: "kotlin",
-            versionIndex: "3",
-            clientId: "8b0ccb5a56740f040660f1f5c966982f",
-            clientSecret: "2f6cc7133b6086f8bd28ebe86bba3a8b6108e54b69f707cffa27b5c32063f555"
-        });
+    const filename = 'temp.kt';
 
-        return res.json({ output: response.data.output });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ error: 'Something went wrong' });
-    }
+    // Save the code into a temp file
+    fs.writeFileSync(filename, code);
+
+    // Compile and run using kotlinc
+    exec(`kotlinc temp.kt -include-runtime -d temp.jar && java -jar temp.jar`, (error, stdout, stderr) => {
+        if (error) {
+            console.error('Execution error:', error);
+            return res.json({ output: stderr || error.message });
+        }
+        res.json({ output: stdout });
+    });
 });
 
+// Route to save the code (optional future use)
+app.post('/save', (req, res) => {
+    const { code } = req.body;
+
+    if (!code) {
+        return res.status(400).json({ error: 'Code is missing' });
+    }
+
+    // Save to permanent file
+    fs.writeFileSync('saved_code.kt', code);
+    res.json({ message: 'Code saved successfully!' });
+});
+
+// Basic home route
+app.get('/', (req, res) => {
+    res.send('Kotlin Code Runner Backend is Working!');
+});
+
+// Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
